@@ -1,0 +1,11 @@
+build:
+  cmd: npm install
+  timeout: 120
+
+run:
+  cmd: node server/index.js
+  envvars:
+    - key: NODE_ENV
+      value: production
+    - key: PORT
+      value: 10000
