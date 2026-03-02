@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubSave - Smart Subscription Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #1f2937;
+      --light: #f9fafb;
+      --gray: #6b7280;
+      --border: #e5e7eb;
+      --card-bg: #ffffff;
+      --bg: #f3f4f6;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    .app { display: none; }
+    .app.active { display: block; }
+
+    /* Auth Screens */
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .auth-logo h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .auth-logo span { color: var(--secondary); }
+
+    .auth-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: var(--light);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    .form-group { margin-bottom: 20px; }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    /* Main App */
+    .main-header {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .logo span { color: var(--secondary); }
+
+    .header-nav {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: var(--gray);
+      font-weight: 500;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--primary);
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    /* Dashboard */
+    .dashboard {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .stat-value.highlight {
+      color: var(--secondary);
+    }
+
+    .stat-sub {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+
+    /* Subscriptions List */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .subs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sub-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .sub-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .sub-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sub-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .sub-icon.streaming { background: #e91e63; }
+    .sub-icon.music { background: #9c27b0; }
+    .sub-icon.productivity { background: #2196f3; }
+    .sub-icon.cloud { background: #00bcd4; }
+    .sub-icon.fitness { background: #4caf50; }
+    .sub-icon.utilities { background: #ff9800; }
+    .sub-icon.other { background: #607d8b; }
+
+    .sub-details h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .sub-meta {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .sub-price {
+      text-align: right;
+    }
+
+    .sub-price .amount {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .sub-price .cycle {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .sub-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: 16px;
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 6px;
+    }
+
+    /* Discover Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow: auto;
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--gray);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    /* Pricing Page */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .pricing-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .pricing-card.featured {
+      border: 2px solid var(--primary);
+      position: relative;
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: white;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pricing-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .pricing-price {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .pricing-price span {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--gray);
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 24px 0;
+      text-align: left;
+    }
+
+    .pricing-features li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pricing-features li::before {
+      content: "✓";
+      color: var(--secondary);
+      font-weight: 700;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .alert-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .alert-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--gray);
+      margin-bottom: 24px;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 16px 20px;
+      background: var(--dark);
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-nav { display: none; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .sub-card { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .sub-actions { margin-left: 0; width: 100%; }
+      .sub-actions .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="authScreen" class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <h1>Sub<span>Save</span></h1>
+        <p style="color: var(--gray); margin-top: 8px;">Smart Subscription Management</p>
+      </div>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="showAuthForm('login')">Login</button>
+        <button class="auth-tab" onclick="showAuthForm('register')">Register</button>
+      </div>
+
+      <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" required placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+
+      <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="registerName" required placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="registerEmail" required placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="registerPassword" required placeholder="••••••••" minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primary">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="app">
+    <header class="main-header">
+      <div class="header-content">
+        <div class="logo">Sub<span>Save</span></div>
+        <nav class="header-nav">
+          <a class="nav-link active" onclick="showPage('dashboard')">Dashboard</a>
+          <a class="nav-link" onclick="showPage('subscriptions')">Subscriptions</a>
+          <a class="nav-link" onclick="showPage('pricing')">Pricing</a>
+        </nav>
+        <div class="user-menu">
+          <span id="userName">User</span>
+          <div class="avatar" id="userAvatar">U</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="page active">
+      <div class="dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Subscriptions</div>
+            <div class="stat-value" id="totalSubs">0</div>
+            <div class="stat-sub">Active subscriptions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Monthly Spend</div>
+            <div class="stat-value" id="monthlySpend">$0</div>
+            <div class="stat-sub">Per month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Annual Spend</div>
+            <div class="stat-value highlight" id="annualSpend">$0</div>
+            <div class="stat-sub">Per year</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Potential Savings</div>
+            <div class="stat-value" id="potentialSavings">$0</div>
+            <div class="stat-sub">By canceling unused</div>
+          </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="section-header">
+          <h2 class="section-title">Your Subscriptions</h2>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn-outline btn-sm" onclick="discoverSubscriptions()">🔍 Discover</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add</button>
+          </div>
+        </div>
+
+        <div id="subscriptionsList" class="subs-list">
+          <div class="empty-state">
+            <h3>No subscriptions yet</h3>
+            <p>Click "Discover" to find your subscriptions automatically</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subscriptions Page -->
+    <div id="subscriptionsPage" class="page">
+      <div class="dashboard">
+        <div class="section-header">
+          <h2 class="section-title">All Subscriptions</h2>
+        </div>
+        <div id="fullSubscriptionsList" class="subs-list"></div>
+      </div>
+    </div>
+
+    <!-- Pricing Page -->
+    <div id="pricingPage" class="page">
+      <div class="dashboard">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="font-size: 36px; margin-bottom: 12px;">Simple, Transparent Pricing</h1>
+          <p style="color: var(--gray); font-size: 18px;">Choose the plan that fits your needs</p>
+        </div>
+        
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <div class="pricing-name">Free</div>
+            <div class="pricing-price">$0<span>/month</span></div>
+            <ul class="pricing-features">
+              <li>Track up to 5 subscriptions</li>
+              <li>Basic analytics</li>
+              <li>Monthly report</li>
+              <li>Email support</li>
+            </ul>
+            <button class="btn btn-outline" onclick="upgradeTier('free')">Current Plan</button>
+          </div>
+
+          <div class="pricing-card featured">
+            <div class="pricing-badge">Most Popular</div>
+            <div class="pricing-name">Pro</div>
+            <div class="pricing-price">$9.99<span>/month</span></div>
+            <ul class="pricing-features">
+              <li>Unlimited subscriptions</li>
+              <li>AI negotiation</li>
+              <li>One-click cancellation</li>
+              <li>Smart alerts</li>
+              <li>Priority support</li>
+            </ul>
+            <button class="btn btn-primary" onclick="upgradeTier('pro')">Upgrade to Pro</button>
+          </div>
+
+          <div class="pricing-card">
+            <div class="pricing-name">Family</div>
+            <div class="pricing-price">$14.99<span>/month</span></div>
+            <ul class="pricing-features">
+              <li>Up to 5 family members</li>
+              <li>All Pro features</li>
+              <li>Family dashboard</li>
+              <li>Spending insights</li>
+            </ul>
+            <button class="btn btn-outline" onclick="upgradeTier('family')">Upgrade to Family</button>
+          </div>
+
+          <div class="pricing-card">
+            <div class="pricing-name">Business</div>
+            <div class="pricing-price">$29.99<span>/user/month</span></div>
+            <ul class="pricing-features">
+              <li>Team management</li>
+              <li>Admin controls</li>
+              <li>API access</li>
+              <li>Audit logs</li>
+              <li>Dedicated support</li>
+            </ul>
+            <button class="btn btn-outline" onclick="upgradeTier('business')">Contact Sales</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Subscription Modal -->
+  <div id="addModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Add Subscription</h2>
+        <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="addSubscription(event)">
+          <div class="form-group">
+            <label>Service Name</label>
+            <input type="text" id="subName" required placeholder="e.g., Netflix">
+          </div>
+          <div class="form-group">
+            <label>Monthly Price</label>
+            <input type="number" id="subPrice" required placeholder="9.99" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="subCategory" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;">
+              <option value="streaming">Streaming</option>
+              <option value="music">Music</option>
+              <option value="productivity">Productivity</option>
+              <option value="cloud">Cloud Storage</option>
+              <option value="fitness">Fitness</option>
+              <option value="gaming">Gaming</option>
+              <option value="news">News</option>
+              <option value="education">Education</option>
+              <option value="utilities">Utilities</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Subscription</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    const API_URL = '';
+    let token = localStorage.getItem('subsave_token');
+    let user = JSON.parse(localStorage.getItem('subsave_user') || '{}');
+    let subscriptions = [];
+
+    // Auth Functions
+    function showAuthForm(form) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(form + 'Form').classList.add('active');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch(API_URL + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        
+        token = data.token;
+        user = data.user;
+        localStorage.setItem('subsave_token', token);
+        localStorage.setItem('subsave_user', JSON.stringify(user));
+        showApp();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('registerName').value;
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+
+      try {
+        const res = await fetch(API_URL + '/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        
+        token = data.token;
+        user = data.user;
+        localStorage.setItem('subsave_token', token);
+        localStorage.setItem('subsave_user', JSON.stringify(user));
+        showApp();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('subsave_token');
+      localStorage.removeItem('subsave_user');
+      token = null;
+      user = {};
+      document.getElementById('authScreen').style.display = 'flex';
+      document.getElementById('mainApp').classList.remove('active');
+    }
+
+    function showApp() {
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('mainApp').classList.add('active');
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+      loadDashboard();
+    }
+
+    // Navigation
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+      document.getElementById(page + 'Page').classList.add('active');
+      event.target.classList.add('active');
+      
+      if (page === 'dashboard') loadDashboard();
+      if (page === 'subscriptions') loadSubscriptions();
+    }
+
+    // API Functions
+    async function apiCall(endpoint, options = {}) {
+      const res = await fetch(API_URL + endpoint, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+          ...options.headers
+        }
+      });
+      return res.json();
+    }
+
+    async function loadDashboard() {
+      subscriptions = await apiCall('/api/subscriptions');
+      updateStats();
+      renderSubscriptions();
+    }
+
+    async function loadSubscriptions() {
+      subscriptions = await apiCall('/api/subscriptions');
+      renderFullList();
+    }
+
+    function updateStats() {
+      const active = subscriptions.filter(s => s.status === 'active');
+      const total = active.reduce((sum, s) => sum + s.price, 0);
+      
+      document.getElementById('totalSubs').textContent = active.length;
+      document.getElementById('monthlySpend').textContent = '$' + total.toFixed(2);
+      document.getElementById('annualSpend').textContent = '$' + (total * 12).toFixed(2);
+      document.getElementById('potentialSavings').textContent = '$' + (total * 0.3).toFixed(2);
+    }
+
+    function renderSubscriptions() {
+      const container = document.getElementById('subscriptionsList');
+      const active = subscriptions.filter(s => s.status === 'active').slice(0, 5);
+      
+      if (active.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>No subscriptions yet</h3>
+            <p>Click "Discover" to find your subscriptions automatically</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = active.map(sub => createSubCard(sub)).join('');
+    }
+
+    function renderFullList() {
+      const container = document.getElementById('fullSubscriptionsList');
+      const active = subscriptions.filter(s => s.status === 'active');
+      
+      if (active.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>No subscriptions</h3>
+            <p>Add your first subscription</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = active.map(sub => createSubCard(sub)).join('');
+    }
+
+    function createSubCard(sub) {
+      return `
+        <div class="sub-card">
+          <div class="sub-info">
+            <div class="sub-icon ${sub.category}">${sub.name.charAt(0)}</div>
+            <div class="sub-details">
+              <h3>${sub.name}</h3>
+              <div class="sub-meta">${sub.category} • ${sub.billingCycle}</div>
+            </div>
+          </div>
+          <div class="sub-price">
+            <div class="amount">$${sub.price.toFixed(2)}</div>
+            <div class="cycle">/${sub.billingCycle === 'monthly' ? 'mo' : 'yr'}</div>
+          </div>
+          <div class="sub-actions">
+            <button class="btn btn-sm btn-outline" onclick="negotiatePrice('${sub.id}')">🤝 Negotiate</button>
+            <button class="btn btn-sm btn-danger" onclick="cancelSubscription('${sub.id}')">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function discoverSubscriptions() {
+      showToast('Discovering your subscriptions...', 'info');
+      
+      const data = await apiCall('/api/subscriptions/discover', { method: 'POST' });
+      
+      showToast(`Found ${data.subscriptions.length} subscriptions!`, 'success');
+      loadDashboard();
+    }
+
+    function openAddModal() {
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    async function addSubscription(e) {
+      e.preventDefault();
+      
+      const sub = {
+        name: document.getElementById('subName').value,
+        price: parseFloat(document.getElementById('subPrice').value),
+        category: document.getElementById('subCategory').value,
+        billingCycle: 'monthly'
+      };
+
+      await apiCall('/api/subscriptions', {
+        method: 'POST',
+        body: JSON.stringify(sub)
+      });
+
+      closeModal('addModal');
+      showToast('Subscription added!', 'success');
+      loadDashboard();
+      e.target.reset();
+    }
+
+    async function cancelSubscription(id) {
+      if (!confirm('Are you sure you want to cancel this subscription?')) return;
+      
+      const data = await apiCall(`/api/subscriptions/${id}/cancel`, { method: 'GET' });
+      
+      showToast(`Cancelled! You save $${data.savings.annual}/year`, 'success');
+      loadDashboard();
+    }
+
+    async function negotiatePrice(id) {
+      showToast('AI is negotiating for you...', 'info');
+      
+      const data = await apiCall(`/api/negotiate/${id}`, { method: 'GET' });
+      
+      if (data.success) {
+        showToast(`Success! New price: $${data.newPrice.toFixed(2)}/mo`, 'success');
+      } else {
+        showToast(data.message, 'warning');
+      }
+      
+      loadDashboard();
+    }
+
+    async function upgradeTier(tier) {
+      const data = await apiCall('/api/upgrade', {
+        method: 'POST',
+        body: JSON.stringify({ tier })
+      });
+      
+      showToast(data.message, 'success');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      toast.style.background = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#1f2937';
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Initialize
+    if (token && user.email) {
+      showApp();
+    }
+  </script>
+</body>
+</html>
